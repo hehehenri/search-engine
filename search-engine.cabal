@@ -22,7 +22,7 @@ maintainer:         henri@henr.in
 extra-source-files: CHANGELOG.md
 
 library
-    exposed-modules:  MyLib
+    exposed-modules:  Lexer
 
     -- Modules included in this library but not exported.
     -- other-modules:

@@ -1,8 +1,8 @@
 module Main where
 
-import qualified MyLib (someFunc)
+import qualified Lexer (tokenize)
 
 main :: IO ()
-main = do
-  putStrLn "Hello, Haskell!"
-  MyLib.someFunc
+main = 
+  let _ = Lexer.tokenize "pogchamp limao 12 limao3. kewk;;" in
+  return ()
