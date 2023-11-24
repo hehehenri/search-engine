@@ -3,7 +3,11 @@ module Lexer(tokenize) where
 import Data.Char
 import Text.Read.Lex
 
-data Token = Word String | Symbol String | Number String deriving(Show)
+data Token = 
+  Word String | 
+  Symbol String | 
+  Number String | 
+  Other Char deriving(Show)
 
 nextToken :: String -> (Maybe Token, String)
 nextToken "" = (Nothing, "")
@@ -18,7 +22,7 @@ nextToken buff@(c:cs)
   | isSymbolChar c =
             let (symb, rest) = span isSymbolChar buff in
             (Just (Lexer.Symbol symb), rest)
-  | otherwise = error $ "ERROR: unexpected character: " ++ [c]
+  | otherwise = (Just (Lexer.Other c), cs)
 
 -- TODO: does the order matters?
 appendToken :: Maybe Token -> [Token] -> [Token]

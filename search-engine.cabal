@@ -22,14 +22,20 @@ maintainer:         henri@henr.in
 extra-source-files: CHANGELOG.md
 
 library
-    exposed-modules:  Lexer
+    exposed-modules:
+        Lexer,
+        Doc
 
     -- Modules included in this library but not exported.
     -- other-modules:
 
     -- LANGUAGE extensions used by modules in this package.
     -- other-extensions:
-    build-depends:    base ^>=4.17.2.0
+    build-depends:
+        base ^>=4.17.2.0,
+        http-conduit ^>=2.3.8.3,
+        tagsoup ^>=0.14.8
+
     hs-source-dirs:   src
     default-language: Haskell2010
 
