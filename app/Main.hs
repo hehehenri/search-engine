@@ -3,9 +3,10 @@ module Main where
 import qualified Lexer (Token, tokenize)
 import Doc (parseUrl)
 import Debug.Trace
-import Data.Map as Map
+import qualified Data.Map as Map
+import qualified Data.List as List
 
-type FreqMap = Map String Int
+type FreqMap = Map.Map String Int
 
 updateFreq :: [Lexer.Token] -> FreqMap
 updateFreq =
@@ -13,14 +14,15 @@ updateFreq =
   where
     increment :: FreqMap -> Lexer.Token -> FreqMap 
     increment freq token = Map.insertWith (+) (show token) 1 freq
--- updateFreq [] freq = freq
--- updateFreq (token:tokens) freq =
---   let newFreq = Map.insertWith (+) (show token) 1 freq in
---   updateFreq tokens newFreq
+
+sortByFreq :: Ord v => [(k, v)] -> [(k, v)]
+sortByFreq = List.sortBy (\ (_, f) (_, f') -> compare f' f)
 
 main :: IO ()
 main = do
   doc <- Doc.parseUrl "https://www.haskell.org/"
-  let tokens = Lexer.tokenize doc
-      freq = updateFreq tokens in
-    putStr $ show freq
+  let tokens = Lexer.tokenize doc in
+    let freq = updateFreq tokens in
+    let freqList = Map.toList freq in
+    let sortedFreqList = sortByFreq freqList in
+    print $ take 10 sortedFreqList
