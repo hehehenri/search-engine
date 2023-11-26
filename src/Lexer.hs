@@ -1,4 +1,4 @@
-module Lexer(tokenize) where
+module Lexer(Token, tokenize) where
 
 import Data.Char
 import Text.Read.Lex
@@ -6,13 +6,25 @@ import Text.Read.Lex
 data Token = 
   Word String | 
   Symbol String | 
-  Number String | 
-  Other Char deriving(Show)
+  Number String |
+  Other Char
+
+content :: Token -> String
+content (Word t) = t
+content (Lexer.Symbol t) = t
+content (Lexer.Number t) = t
+content (Other t) = [t]
+
+instance Show Token where
+  show = content
 
 nextToken :: String -> (Maybe Token, String)
 nextToken "" = (Nothing, "")
 nextToken buff@(c:cs)
   | isSpace c = nextToken cs
+  -- Skip line break scapes like \\n
+  | c == '\\' && not (null cs) && head cs == 'n' =
+    (Nothing, tail cs)
   | isAlpha c =
             let (word, rest) = span isAlphaNum buff in
             (Just (Lexer.Word word), rest)

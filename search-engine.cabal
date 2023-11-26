@@ -33,6 +33,7 @@ library
     -- other-extensions:
     build-depends:
         base ^>=4.17.2.0,
+        containers ^>=0.6.7,
         http-conduit ^>=2.3.8.3,
         tagsoup ^>=0.14.8
 
@@ -49,6 +50,7 @@ executable search-engine
     -- other-extensions:
     build-depends:
         base ^>=4.17.2.0,
+        containers ^>=0.6.7,
         search-engine
 
     hs-source-dirs:   app
