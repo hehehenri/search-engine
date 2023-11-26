@@ -2,6 +2,7 @@ module Doc(parseUrl) where
 
 import Network.HTTP.Conduit (simpleHttp)
 import Text.HTML.TagSoup
+import Data.Char (toLower)
 
 fetchUrl :: String -> IO String
 fetchUrl url = do  
@@ -9,7 +10,7 @@ fetchUrl url = do
   return $ show response
 
 cleanupText :: String -> String
-cleanupText = unwords . words
+cleanupText = map toLower . unwords . words
 
 extractText :: [Tag String] -> String
 extractText [] = ""
