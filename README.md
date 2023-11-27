@@ -30,6 +30,18 @@ This is a simple search engine implemented in Haskell. The search engine takes a
     ```bash
     # TODO: Provide examples of how to use it
     ```
+## Project Status
+
+The project is currently in progress, and the following tasks have been completed or are still pending:
+
+- [ ] **Web Crawling:** The system is in the process of scanning the entire website to traverse its content thoroughly.
+  
+- [x] **HTML Parsing:** The HTML documents retrieved during web crawling are being parsed to extract relevant information. However, there are still issues to be addressed in this functionality.
+
+- [x] **Document Tokenization:** The system successfully extracts valid tokens from parsed HTML documents.
+
+- [ ] **Document Indexing:** The next step is to implement document indexing, creating an index of term frequencies for each document.
+
 ## License
 
 This project is licensed under the [MIT License](LICENSE).
