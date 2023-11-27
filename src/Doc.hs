@@ -1,13 +1,20 @@
-module Doc(parseUrl) where
+module Doc(parseUrl, extractAnchors) where
 
-import Network.HTTP.Conduit (simpleHttp)
 import Text.HTML.TagSoup
 import Data.Char (toLower)
+import qualified Data.Map as Map
+import Http(fetchUrl)
+import Data.Maybe
 
-fetchUrl :: String -> IO String
-fetchUrl url = do  
-  response <- simpleHttp url
-  return $ show response
+isAnchorTag :: Tag String -> Bool
+isAnchorTag (TagOpen "a" _) = True
+isAnchorTag _ = False
+
+extractHref :: Tag String -> Maybe String
+extractHref (TagOpen _ attrs) = lookup "href" attrs
+
+extractAnchors :: [Tag String] -> [String]
+extractAnchors tags = mapMaybe extractHref (filter isAnchorTag tags)
 
 cleanupText :: String -> String
 cleanupText = map toLower . unwords . words
