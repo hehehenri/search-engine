@@ -1,4 +1,4 @@
-# Haskell Search Engine
+# Search Engine: Poor Man's Google
 
 This is a simple search engine implemented in Haskell. The search engine takes a URL as input, retrieves the content of the webpage, extracts all the anchors, indexes the content as documents, and performs searches using the TF-IDF (Term Frequency-Inverse Document Frequency) algorithm.
 
