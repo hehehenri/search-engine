@@ -14,6 +14,7 @@ depends: [
   "ocaml"
   "dune" {>= "3.11"}
   "lambdasoup"
+  "ppx_deriving"
   "odoc" {with-doc}
 ]
 build: [

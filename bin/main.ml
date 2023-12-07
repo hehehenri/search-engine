@@ -11,6 +11,7 @@ module Lexer = struct
     | Word of string
     | Number of string
     | Other of char
+  [@@deriving show]
   ;;
 
   let is_alpha char = match char with
@@ -27,6 +28,9 @@ module Lexer = struct
     match char with
     | ' ' | '\n' -> true
     | _ -> false
+
+  let string_to_chars string =
+    string |> String.to_seq |> List.of_seq
 
   let chars_to_string chars =
     chars |> List.to_seq |> String.of_seq
@@ -46,20 +50,28 @@ module Lexer = struct
       | input -> acc_to_string acc, input
     in
     drop_while pred chars []
-  
-  let rec tokenize (input : char list) acc =
-    match input with
-    | [] -> acc
-    | head :: tail when skip_char head -> tokenize tail acc
-    | head :: _ when is_alpha head -> 
-      let word, rest = drop_while is_alpha input in 
-      tokenize rest (Word word :: acc)
-    | head :: _ when is_digit head ->
-      let word, rest = drop_while is_digit input in 
-      tokenize rest (Number word :: acc)
-    | head :: tail ->
-      let token = Other head in
-      tokenize tail (token :: acc)
+
+  let tokenize input =
+    let rec tokenize (input : char list) acc =
+      match input with
+      | [] -> acc
+      | head :: tail when skip_char head -> tokenize tail acc
+      | head :: _ when is_alpha head -> 
+        let word, rest = drop_while is_alpha input in 
+        tokenize rest (Word word :: acc)
+      | head :: _ when is_digit head ->
+        let word, rest = drop_while is_digit input in 
+        tokenize rest (Number word :: acc)
+      | head :: tail ->
+        let token = Other head in
+        tokenize tail (token :: acc)
+    in
+    let input = string_to_chars input in
+    tokenize input []
 end
 
-let () = print_endline "Hello, World!"
+let input_html = Soup.read_file "./input.html"
+let input_string = HTMLParser.to_string input_html
+let tokens = Lexer.tokenize input_string
+
+let _ = List.map Lexer.show_token tokens

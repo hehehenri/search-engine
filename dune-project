@@ -20,7 +20,7 @@
  (name search_engine)
  (synopsis "A short synopsis")
  (description "A longer description")
- (depends ocaml dune lambdasoup)
+ (depends ocaml dune lambdasoup ppx_deriving)
  (tags
   (topics "to describe" your project)))
 
