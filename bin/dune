@@ -1,4 +1,4 @@
 (executable
  (public_name search_engine)
  (name main)
- (libraries search_engine))
+ (libraries search_engine lambdasoup))

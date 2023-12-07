@@ -1,0 +1,11 @@
+lib: [
+  "_build/install/default/lib/search_engine/META"
+  "_build/install/default/lib/search_engine/dune-package"
+  "_build/install/default/lib/search_engine/opam"
+]
+bin: [
+  "_build/install/default/bin/search_engine"
+]
+doc: [
+  "_build/install/default/doc/search_engine/README.md"
+]

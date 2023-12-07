@@ -1,6 +1,7 @@
 (lang dune 3.11)
 
 (name search_engine)
+(version 3659bfa-dirty)
 
 (generate_opam_files true)
 
@@ -19,7 +20,7 @@
  (name search_engine)
  (synopsis "A short synopsis")
  (description "A longer description")
- (depends ocaml dune)
+ (depends ocaml dune lambdasoup)
  (tags
   (topics "to describe" your project)))
 
