@@ -1,5 +1,4 @@
 (executable
  (public_name search_engine)
  (name main)
- (preprocess (pps ppx_deriving.show))
- (libraries search_engine lambdasoup ppx_deriving))
+ (libraries lexer parser))
