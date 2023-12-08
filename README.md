@@ -1,6 +1,6 @@
 # Search Engine: Poor Man's Google
 
-This is a simple search engine implemented in Haskell. The search engine takes a URL as input, retrieves the content of the webpage, extracts all the anchors, indexes the content as documents, and performs searches using the TF-IDF (Term Frequency-Inverse Document Frequency) algorithm.
+This is a simple search engine implemented in OCaml. The search engine takes a URL as input, retrieves the content of the webpage, extracts all the anchors, indexes the content as documents, and performs searches using the TF-IDF (Term Frequency-Inverse Document Frequency) algorithm.
 
 ## Features
 
@@ -13,7 +13,7 @@ This is a simple search engine implemented in Haskell. The search engine takes a
 1. **Clone the Repository:**
     ```bash
     git clone https://github.com/hnrbs/search-engine.git
-    cd haskell-search-engine
+    cd search-engine
     ```
 
 2. **Build the Project:**
