@@ -18,12 +18,11 @@ This is a simple search engine implemented in OCaml. The search engine takes a U
 
 2. **Build the Project:**
     ```bash
-    # TODO: Add instructions for building the project
+    opam install . --deps-only
     ```
 
 3. **Run the Search Engine:**
     ```bash
-    # TODO: Add instructions for running the project
     ```
 
 4. **Perform a Search:**
@@ -34,7 +33,7 @@ This is a simple search engine implemented in OCaml. The search engine takes a U
 
 The project is currently in progress, and the following tasks have been completed or are still pending:
 
-- [ ] **Web Crawling:** The system is in the process of scanning the entire website to traverse its content thoroughly.
+- [x] **Web Crawling:** The system is in the process of scanning the entire website to traverse its content thoroughly.
   
 - [x] **HTML Parsing:** The HTML documents retrieved during web crawling are being parsed to extract relevant information. However, there are still issues to be addressed in this functionality.
 
