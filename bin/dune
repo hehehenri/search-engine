@@ -1,4 +1,9 @@
 (executable
  (public_name search_engine)
  (name main)
- (libraries lexer parser))
+ (libraries
+	lexer
+	parser
+	piaf
+    cohttp-lwt-unix
+    lwt))

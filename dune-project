@@ -1,27 +1,33 @@
 (lang dune 3.11)
 
 (name search_engine)
+
+(maintainers "henri <henri@henr.in>")
+
+(authors "henri <henri@henr.in>")
+
 (version 3659bfa-dirty)
 
 (generate_opam_files true)
 
 (source
- (github username/reponame))
-
-(authors "Author Name")
-
-(maintainers "Maintainer Name")
+ (github hnrbs/search-engine))
 
 (license LICENSE)
 
-(documentation https://url/to/documentation)
+(documentation https://github.com/hnrbs/search-engine)
 
 (package
  (name search_engine)
- (synopsis "A short synopsis")
- (description "A longer description")
- (depends ocaml dune lambdasoup ppx_deriving)
- (tags
-  (topics "to describe" your project)))
+ (synopsis "Simple crawler and search engine")
+ (description "Search engine written entirely in OCaml.")
+ (depends 
+  ocaml
+  dune
+  lambdasoup
+  ppx_deriving
+  piaf
+  cohttp-lwt-unix
+  lwt)
 
-; See the complete stanza docs at https://dune.readthedocs.io/en/stable/dune-files.html#dune-project
+ (tags (topics "to describe" your project)))
