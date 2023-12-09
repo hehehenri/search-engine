@@ -2,8 +2,8 @@
  (public_name search_engine)
  (name main)
  (libraries
+    crawler
 	lexer
 	parser
-	piaf
     cohttp-lwt-unix
     lwt))

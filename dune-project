@@ -28,6 +28,7 @@
   ppx_deriving
   piaf
   cohttp-lwt-unix
-  lwt)
+  lwt
+  sqlite3)
 
  (tags (topics "to describe" your project)))

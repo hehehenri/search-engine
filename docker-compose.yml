@@ -1,0 +1,15 @@
+version: '3'
+
+services:
+  db:
+    image: sqlite:latest
+    container_name: index
+    volumes:
+      - ./db_data:/data
+    environment:
+      - SQLITE_DATABASE=index.db
+      - SQLITE_USER=user
+      - SQLITE_PASSWORD=password
+      - SQLITE_ROOT_PASSWORD=root
+    ports:
+      - "6969:5432"
