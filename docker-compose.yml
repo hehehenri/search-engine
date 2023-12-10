@@ -1,15 +1,17 @@
-version: '3'
-
 services:
   db:
-    image: sqlite:latest
+    image: postgres:latest
     container_name: index
+    restart: unless-stopped
     volumes:
-      - ./db_data:/data
+      - postgres-data:/var/lib/postgresql/data
+      - ./migrations:/docker-entrypoint-initdb.d/
     environment:
-      - SQLITE_DATABASE=index.db
-      - SQLITE_USER=user
-      - SQLITE_PASSWORD=password
-      - SQLITE_ROOT_PASSWORD=root
+      POSTGRES_USER: postgres
+      POSTGRES_DB: index
+      POSTGRES_PASSWORD: password
     ports:
       - "6969:5432"
+
+volumes:
+  postgres-data: null
