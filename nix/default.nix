@@ -13,8 +13,10 @@ buildDunePackage rec {
     };
 
   propagatedBuildInputs = [
+    lambdasoup
     ppx_deriving
     piaf
+    eio_main
     caqti
     caqti-eio
     caqti-driver-postgresql

@@ -5,5 +5,5 @@
     crawler
 	lexer
 	parser
-    cohttp-lwt-unix
-    lwt))
+	eio
+	eio_main))

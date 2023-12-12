@@ -1,23 +1,22 @@
-open Lwt.Infix
-open Cohttp
-open Cohttp_lwt_unix
+open Piaf
 open Soup
 
 module UrlSet = Set.Make(String)
-module Documents = Map.Make(String)
+module DocumentMap = Map.Make(String)
 
 let input = "https://henr.in/"
 
-let fetch_doc url =
-  let uri = Uri.of_string url in
+let fetch_doc env ~sw url =
+  print_endline @@ Printf.sprintf "INFO: fetching doc: %s" url;
 
-  Client.get uri >>= fun (res, body) ->
-  let status = res |> Response.status |> Code.code_of_status in
-  Printf.printf "INFO: fetched %s: status(%d)\n" url status;
-
-  Cohttp_lwt.Body.to_string body >>= fun body_str ->
-
-  Lwt.return body_str
+  match Client.Oneshot.get ~sw env (Uri.of_string url) with
+  | Ok res ->
+    if Status.is_successful res.status
+    then Body.to_string res.body
+    else 
+      let msg = Status.to_string res.status in
+      Result.Error (`Msg msg)
+  | Error e -> failwith (Error.to_string e)
 
 let doc_anchors html =
   let anchors = html $$ "a[href]" |> to_list in
@@ -65,36 +64,37 @@ let sanitize_hrefs hrefs base_url =
 
 let has_visited_url url visited_urls = UrlSet.mem url visited_urls ;;
 
-let traverse url =
-  let rec traverse urls_to_visit visited_urls documents =
-    let urls = urls_to_visit |> UrlSet.to_seq |>  List.of_seq in
-  
-    match urls with
-    | [] -> Lwt.return documents
-    | url :: _ ->
+let traverse env switch url =
+  let rec traverse urls_to_visit visited_urls documents =  
+    match UrlSet.min_elt_opt urls_to_visit with
+    | None -> documents
+    | Some current_url ->
+      let urls_to_visit = UrlSet.remove current_url urls_to_visit in 
+
       match has_visited_url url visited_urls with
-      | true ->
-        let urls_to_visit = UrlSet.remove url urls_to_visit in 
-        traverse urls_to_visit visited_urls documents
+      | true -> traverse urls_to_visit visited_urls documents
       | false ->
-        fetch_doc url >>= fun res_body ->
-        let documents = Documents.add url res_body documents in
-      
-        let hrefs = parse res_body |> doc_anchors in 
-        let urls = 
-          sanitize_hrefs hrefs input
-          |> List.filter (from_same_domain input)
-          |> List.filter (fun url -> not @@ has_visited_url url visited_urls)
-          |> List.to_seq in
+        let body = fetch_doc env ~sw:switch url in
+        match body with
+        | Ok res_body -> 
+          let documents = DocumentMap.add url res_body documents in
+    
+          let hrefs = parse res_body |> doc_anchors in 
+          let urls = 
+            sanitize_hrefs hrefs input
+            |> List.filter (from_same_domain input)
+            |> List.filter (fun url -> not @@ has_visited_url url visited_urls)
+            |> List.to_seq in
 
-        let urls_to_visit = UrlSet.add_seq urls urls_to_visit in
-        let visited_urls = UrlSet.add url visited_urls in
-        traverse urls_to_visit visited_urls documents
+          let urls_to_visit = UrlSet.add_seq urls urls_to_visit in
+          let visited_urls = UrlSet.add url visited_urls in
+          traverse urls_to_visit visited_urls documents
+        | Error e -> 
+          print_endline @@ Printf.sprintf "ERROR: failed to fetch doc: %s" (Error.to_string e);
+          traverse urls_to_visit visited_urls documents 
   in
+  traverse (UrlSet.singleton url) UrlSet.empty DocumentMap.empty 
 
-  traverse (UrlSet.singleton url) UrlSet.empty Documents.empty 
-
-let main () =
-  traverse input >>= fun docs ->
-  let _ = Documents.mapi (fun key _document -> print_endline key) docs in
-  Lwt.return ()
+let traverse env url =
+  Eio.Switch.run (fun switch ->
+    traverse env switch url)

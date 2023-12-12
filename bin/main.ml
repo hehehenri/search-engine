@@ -1,11 +1,4 @@
-open Lwt.Infix
-open Cohttp
-open Cohttp_lwt_unix
-open Soup
-
-let main () =
-  traverse input >>= fun docs ->
-  let _ = Documents.mapi (fun key _document -> print_endline key) docs in
-  Lwt.return ()
-
-let () = Lwt_main.run (main ())
+let () = Eio_main.run(fun env ->
+  let _documents = Crawler.traverse env "https://henr.in/" in
+  ()
+)
