@@ -1,17 +1,15 @@
-{ pkgs, teika }:
+{ pkgs, searchEngine }:
 
-with pkgs; with ocamlPackages; mkShell {
-  inputsFrom = [ teika ];
+with pkgs; with pkgs.ocamlPackages; mkShell {
+  inputsFrom = [ searchEngine ];
   packages = [
-    # Make developer life easier
     # formatters
     nixfmt
     ocamlformat
 
-    # OCaml developer tooling
+    # dev tooling
     ocaml
     dune_3
     ocaml-lsp
-    ocamlformat-rpc
   ];
 }

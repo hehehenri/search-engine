@@ -1,9 +1,7 @@
-{ pkgs, doCheck ? true, nix-filter }:
+{ pkgs, nix-filter }:
 
-let inherit (pkgs) lib stdenv ocamlPackages; in
-
-with ocamlPackages; buildDunePackage rec {
-  pname = "teika";
+with pkgs.ocamlPackages; buildDunePackage rec {
+  pname = "search-engine";
   version = "0.0.0-dev";
 
   src = with nix-filter.lib;
@@ -11,16 +9,23 @@ with ocamlPackages; buildDunePackage rec {
       root = ./..;
       include = [
         "dune-project"
-        "smol"
-        "teika"
+        "src"
       ];
       exclude = [];
     };
 
-  propagatedBuildInputs = [ menhir menhirLib sedlex ppx_deriving eio eio_main ]
-    # checkInputs are here because when cross compiling dune needs test dependencies
-    # but they are not available for the build phase. The issue can be seen by adding strictDeps = true;.
-    ++ checkInputs;
+  propagatedBuildInputs = [
+    ppx_deriving
+    piaf
+    caqti
+    caqti-eio
+    caqti-driver-postgresql
+    ppx_rapper
+    ppx_rapper_eio
+    routes
+    ppx_deriving_yojson
+  ]
+  ++ checkInputs;
 
   checkInputs = [ alcotest ];
 }

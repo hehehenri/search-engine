@@ -11,18 +11,15 @@
     flake-utils.lib.eachDefaultSystem (system:
       let pkgs = (nixpkgs.makePkgs {
         inherit system;
-        extraOverlays = [
-          (import ./nix/overlay.nix)
-        ];
+        extraOverlays = [];
       }).extend (self: super: {
         ocamlPackages = super.ocaml-ng.ocamlPackages_5_0;
       }); in
-      let teika = pkgs.callPackage ./nix {
-        inherit nix-filter;
-        doCheck = true;
-      }; in
+      let searchEngine =
+        pkgs.callPackage ./nix { inherit nix-filter; };
+      in
       rec {
-        packages = { inherit teika; };
-        devShell = import ./nix/shell.nix { inherit pkgs teika; };
+        packages = { inherit searchEngine; };
+        devShell = import ./nix/shell.nix { inherit pkgs searchEngine; };
       });
 }
