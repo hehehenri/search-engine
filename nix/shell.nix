@@ -1,6 +1,8 @@
 { pkgs, searchEngine }:
 
-with pkgs; with pkgs.ocamlPackages; mkShell {
+with pkgs;
+with pkgs.ocamlPackages;
+mkShell {
   inputsFrom = [ searchEngine ];
   packages = [
     # formatters
