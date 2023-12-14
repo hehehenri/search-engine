@@ -2,3 +2,4 @@ dist-*
 _build/
 _opam/
 .db/
+.direnv/
