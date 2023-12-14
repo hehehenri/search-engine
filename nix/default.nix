@@ -13,6 +13,7 @@ buildDunePackage rec {
     };
 
   propagatedBuildInputs = [
+    utop
     lambdasoup
     ppx_deriving
     piaf

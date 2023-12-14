@@ -1,0 +1,12 @@
+(library
+ (name storage)
+ (libraries
+  caqti
+  caqti-eio
+  caqti-eio.unix
+  caqti-driver-postgresql
+  ppx_rapper_eio
+  yojson
+  ppx_deriving_yojson.runtime)
+ (preprocess
+  (pps ppx_rapper ppx_deriving_yojson)))

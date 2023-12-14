@@ -18,11 +18,12 @@ This is a simple search engine implemented in OCaml. The search engine takes a U
 
 2. **Build the Project:**
     ```bash
-    opam install . --deps-only
+    nix build .#
     ```
 
 3. **Run the Search Engine:**
     ```bash
+    
     ```
 
 4. **Perform a Search:**
