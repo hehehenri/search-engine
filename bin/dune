@@ -6,5 +6,6 @@
 	lexer
 	parser
 	storage
+	routes
 	eio
 	eio_main))
