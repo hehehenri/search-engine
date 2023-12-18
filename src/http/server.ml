@@ -24,9 +24,11 @@ let request_handler (params : Request_info.t Server.ctx) =
     |> String.split_on_char '/'
     |> List.filter (fun x -> String.length x > 0) in
 
-  match path with
-  | [] | [""] -> handle_health_check ()
-  | "index" :: url :: [] -> handle_index url
+  let meth = params.request.meth in
+
+  match meth, path with
+  | `GET, [] | `GET, [""] -> handle_health_check ()
+  | `GET, "index" :: url :: [] -> handle_index url
   | _ -> handle_not_found ()
 
 let host_to_str host = Fmt.str "%a" Eio.Net.Ipaddr.pp host
