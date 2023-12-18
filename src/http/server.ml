@@ -3,28 +3,36 @@ open Piaf
 type request = Request_info.t Server.ctx
 
 let handle_health_check () =
-  Logs.info (fun m -> m "server.health_check");
+  Logs.info (fun m -> m "server.handle_health_check");
   let body = "Status: Health" in
   Response.of_string ~body `OK
 
 let handle_not_found () = 
-  Logs.info (fun m -> m "server.not_found");
+  Logs.info (fun m -> m "server.handle_not_found");
   Response.of_string ~body:"not found" `Not_found
 
 let handle_index uri =
-  Logs.info (fun m -> m "server.index(uri=%s)" uri);
+  Logs.info (fun m -> m "server.handle_index(uri=%s)" uri);
   let body = Printf.sprintf "indexing %s..." uri in
   Response.of_string ~body `OK
 
 let request_handler (params : Request_info.t Server.ctx) =
-  let path =
-     params.request
+  let meth = params.request.meth in
+  let path = 
+      params.request
     |> Request.uri
-    |> Uri.path
+    |> Uri.path in
+
+
+  Logs.info (fun m ->
+    let meth = Method.to_string meth in
+    m "Request %s: %s" meth path);
+
+  let path =
+    path
     |> String.split_on_char '/'
     |> List.filter (fun x -> String.length x > 0) in
 
-  let meth = params.request.meth in
 
   match meth, path with
   | `GET, [] | `GET, [""] -> handle_health_check ()

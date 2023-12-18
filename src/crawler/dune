@@ -1,7 +1,3 @@
 (library
-  (name crawler)
-  (libraries 
-	parser
-    eio
-    eio_main
-	piaf))
+ (name crawler)
+ (libraries parser eio eio_main piaf))

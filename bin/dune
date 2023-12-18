@@ -2,15 +2,15 @@
  (public_name search_engine)
  (name main)
  (libraries
-	http
-    crawler
-	lexer
-	parser
-	storage
-	routes
-	eio
-	eio_main
-    logs
-    logs.fmt
-    fmt.tty
-    logs.threaded))
+  http
+  crawler
+  lexer
+  parser
+  storage
+  routes
+  eio
+  eio_main
+  logs
+  logs.fmt
+  fmt.tty
+  logs.threaded))
