@@ -9,4 +9,8 @@
 	storage
 	routes
 	eio
-	eio_main))
+	eio_main
+    logs
+    logs.fmt
+    fmt.tty
+    logs.threaded))

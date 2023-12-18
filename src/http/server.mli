@@ -2,9 +2,9 @@ open Piaf
 
 type request = Request_info.t Server.ctx
 
-val handle_health_check : Response.t
+val handle_health_check : unit -> Response.t
 
-val handle_not_found : Response.t 
+val handle_not_found : unit -> Response.t 
 
 val handle_index : string -> Response.t
 
