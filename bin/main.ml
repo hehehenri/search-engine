@@ -1,4 +1,6 @@
-let () = Eio_main.run(fun env ->
-  let _documents = Crawler.traverse env "https://henr.in/" in
-  ()
-)
+ let () = 
+  Eio_main.run(fun env ->
+    Eio.Std.Switch.run (fun sw -> 
+    let _command = Http.Server.serve ~sw env in
+    ()
+  ))

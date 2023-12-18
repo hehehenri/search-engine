@@ -1,6 +1,6 @@
 open Piaf
 
-type request = Piaf.Request_info.t Piaf.Server.ctx
+type request = Request_info.t Server.ctx
 
 let handle_health_check =
   let body = "Status: Health" in
@@ -10,7 +10,7 @@ let handle_health_check =
 let handle_not_found = 
   Response.create `Not_found
 
-let handle_index ~env uri =
+let handle_index _uri =
   assert false
 
 let request_handler (params : Request_info.t Server.ctx) =
@@ -22,19 +22,20 @@ let request_handler (params : Request_info.t Server.ctx) =
 
   match path with
   | [] | [""] -> handle_health_check
-  | "index" :: _url :: [] -> assert false
+  | "index" :: url :: [] -> handle_index url
   | _ -> handle_not_found
+;;
 
-let run ~sw ~host ~port env handler =
+let run ~sw ~host ~port env =
   let config =
     Server.Config.create (`Tcp (host, port))
   in
-  let server = Server.create ~config handler in
+  let server = Server.create ~config request_handler in
   let command = Server.Command.start ~sw env server in
   command
 ;;
 
 let serve ~sw env =
   let host = Eio.Net.Ipaddr.V4.loopback in
-  run ~sw ~host ~port:8080 env request_handler
+  run ~sw ~host ~port:8080 env
 ;;
