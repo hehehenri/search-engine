@@ -2,8 +2,9 @@
  (public_name search_engine)
  (name main)
  (libraries
-  http
+  deps
   crawler
+  http
   lexer
   parser
   storage

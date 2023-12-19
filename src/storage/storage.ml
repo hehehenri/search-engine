@@ -17,7 +17,8 @@ type storage = | Storage of { pool : pool }
 type t = storage
 
 let connect ~env ~sw uri =
-  let pool = Caqti_eio_unix.connect_pool ~stdenv:env ~sw uri in
+  let stdenv = (env :> Caqti_eio.stdenv) in
+  let pool = Caqti_eio_unix.connect_pool ~stdenv ~sw uri in
   match pool with
   | Ok pool -> Storage { pool }
   | Error e -> raise @@ Storage_error e

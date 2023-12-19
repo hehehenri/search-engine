@@ -2,7 +2,7 @@ type storage
 type t = storage
 
 val connect : 
-  env:Caqti_eio.stdenv -> 
+  env:Eio_unix.Stdenv.base -> 
   sw:Eio.Switch.t -> 
   Uri.t -> storage
 
