@@ -1,3 +1,11 @@
 (library
  (name http)
- (libraries crawler lexer piaf routes deps))
+ (preprocess (pps ppx_deriving_yojson))
+ (libraries
+  crawler
+  lexer
+  piaf
+  routes
+  deps
+  yojson
+  ppx_deriving_yojson.runtime))

@@ -18,8 +18,44 @@ let frequency_table (tokens:Lexer.token list) =
     acc) acc tokens
 ;;
 
+module ResponseError = struct
+  let create ~message ~status =
+    Logs.err (fun m -> m "request error: %s" message);
+    Response.of_string ~body:message status
+
+  let from_err ~status err =
+    let message = Error.to_string err in
+    create ~message ~status
+
+  let invalid_payload payload =
+    let message = Printf.sprintf "invalid payload: %s" payload in
+    create ~message ~status:`Bad_request
+end
+
+let response_of_result response =
+  match response with
+  | Ok response -> response
+  | Error response -> response
+;;
+
+type index_payload = {
+  uri: string
+} [@@deriving yojson]
+
 (* TODO: should I add the env and sw to the deps? *)
-let handle_index ~env ~sw ~(deps:Deps.deps) uri =
+let handle_index ~env ~sw ~(deps:Deps.deps) (payload:Body.t) =
+  let (let*) = Result.bind in
+
+  let* body = Body.to_string payload 
+    |> Result.map_error (ResponseError.from_err ~status:`Bad_request) in
+  let body_json = Yojson.Safe.from_string body in
+  
+  let* { uri } = index_payload_of_yojson body_json 
+    |> Result.map_error (fun _ -> ResponseError.invalid_payload body) in
+
+  Logs.info (fun m -> m "server.handle_index(uri=%s)" uri);
+
+  (* TODO: move the logic somewhere else *)
   let store_document uri tokens =
     let frequency_table = frequency_table tokens in
 
@@ -29,17 +65,18 @@ let handle_index ~env ~sw ~(deps:Deps.deps) uri =
       Storage.Token.insert token deps.storage; 
     ) frequency_table;
   in
-  
-  (* TODO: move the logic somewhere else *)
-  let open Crawler in
 
+  let open Crawler in
   let documents = traverse ~env ~sw uri in
   let documents = DocumentMap.map Lexer.tokenize documents in
   DocumentMap.iter store_document documents;
   
-  Logs.info (fun m -> m "server.handle_index(uri=%s)" uri);
-  let body = Printf.sprintf "indexing %s..." uri in
-  Response.of_string ~body `OK
+  Ok (Response.create `OK)
+;;
+
+let handle_index ~env ~sw ~(deps:Deps.deps) (payload:Body.t) =
+  let result = handle_index ~env ~sw ~deps payload in
+  response_of_result result
 ;;
 
 let request_handler ~env ~sw ~(deps:Deps.deps) (params : Request_info.t Server.ctx) =
@@ -59,10 +96,9 @@ let request_handler ~env ~sw ~(deps:Deps.deps) (params : Request_info.t Server.c
     |> String.split_on_char '/'
     |> List.filter (fun x -> String.length x > 0) in
 
-
   match meth, path with
   | `GET, [] | `GET, [""] -> handle_health_check ()
-  | `GET, "index" :: url :: [] -> handle_index ~env ~sw ~deps url
+  | `POST, "index" :: [] -> handle_index ~env ~sw ~deps params.request.body
   | _ -> handle_not_found ()
 
 let run ~sw ~host ~port ~env deps =
