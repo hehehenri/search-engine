@@ -1,6 +1,7 @@
 (library
  (name storage)
  (libraries
+  lexer
   identifiers
   caqti
   caqti-eio

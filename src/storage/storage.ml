@@ -42,6 +42,18 @@ module Token = struct
     document_url: string;
   } ;;
 
+
+  (* TODO: ain't no way i'll name this a token "dto". think harder *)
+  let dto_of_token token occurrences document_url =
+    let open Lexer in
+    match token with
+    | Word content ->
+      { content; kind=`Word; occurrences; document_url; }
+    | Number content ->
+      { content; kind=`Number; occurrences; document_url; }
+    | Other char ->
+      { content=(Char.escaped char) ; kind=`Other; occurrences; document_url; }
+  ;;
   let token_kind token =
     match token.kind with
     | `Word -> "word"

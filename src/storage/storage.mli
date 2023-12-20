@@ -14,6 +14,8 @@ module Token : sig
     document_url: string;
   }
 
+  val dto_of_token : Lexer.token -> int -> string -> token 
+
   val insert : token -> storage -> unit
 
   val get_all : storage -> Identifiers.Token.token list
