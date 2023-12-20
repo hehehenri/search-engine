@@ -1,12 +1,17 @@
 open Piaf
-open Soup
 
 module UrlSet = Set.Make(String)
 module DocumentMap = Map.Make(String)
 
 let input = "https://henr.in/"
 
-let fetch_doc env ~sw url =
+let _show_url_set url_set =
+  print_endline @@ [%derive.show: string list] (UrlSet.elements url_set) 
+
+let _show_document_map document_map =
+  print_endline @@ [%derive.show: (string * string) list] (DocumentMap.bindings document_map)
+
+let fetch_doc ~env ~sw url =
   print_endline @@ Printf.sprintf "INFO: fetching doc: %s" url;
 
   match Client.Oneshot.get ~sw env (Uri.of_string url) with
@@ -17,10 +22,7 @@ let fetch_doc env ~sw url =
       let msg = Status.to_string res.status in
       Result.Error (`Msg msg)
   | Error e -> failwith (Error.to_string e)
-
-let doc_anchors html =
-  let anchors = html $$ "a[href]" |> to_list in
-  List.map (R.attribute "href") anchors
+;;
 
 let url_domain url =
   let start_pos = String.index_opt url '/' |> Option.value ~default:(String.length url) in
@@ -64,7 +66,8 @@ let sanitize_hrefs hrefs base_url =
 
 let has_visited_url url visited_urls = UrlSet.mem url visited_urls ;;
 
-let traverse env switch url =
+
+let traverse fetch_url url =
   let rec traverse urls_to_visit visited_urls documents =  
     match UrlSet.min_elt_opt urls_to_visit with
     | None -> documents
@@ -74,12 +77,12 @@ let traverse env switch url =
       match has_visited_url url visited_urls with
       | true -> traverse urls_to_visit visited_urls documents
       | false ->
-        let body = fetch_doc env ~sw:switch url in
+        let body = fetch_url url in
         match body with
         | Ok res_body -> 
           let documents = DocumentMap.add url res_body documents in
     
-          let hrefs = parse res_body |> doc_anchors in 
+          let hrefs = Parser.anchors res_body in 
           let urls = 
             sanitize_hrefs hrefs input
             |> List.filter (from_same_domain input)
@@ -93,8 +96,47 @@ let traverse env switch url =
           print_endline @@ Printf.sprintf "ERROR: failed to fetch doc: %s" (Error.to_string e);
           traverse urls_to_visit visited_urls documents 
   in
-  traverse (UrlSet.singleton url) UrlSet.empty DocumentMap.empty 
+  traverse (UrlSet.singleton url) UrlSet.empty DocumentMap.empty
+;; 
 
-let traverse env url =
-  Eio.Switch.run (fun switch ->
-    traverse env switch url)
+open Base
+
+let%test_unit "Crawler.traverse" =
+  let anchor href =
+    "<a href=\"" ^ href ^ "\" />" 
+  in
+
+  let html_with_anchors =
+    let hrefs = ["/first-link"; "https://example.com/second-link"] in
+    let anchors = List.fold_left hrefs ~init:"" ~f:(fun acc href -> acc ^ (anchor href)) in 
+   
+    {| <!DOCTYPE html>
+      <html lang="en">
+      <head>
+        <title>Simple HTML Boilerplate</title>
+      </head>
+      <body> 
+    |} ^ anchors ^ {|
+      </body>
+      </html>
+    |}
+  in
+
+  let fetch_url _url =
+    let resp = html_with_anchors in
+    Ok resp
+  in
+
+  let expecting = [
+    ("https://example.com/", html_with_anchors);
+    ("https://example.com/first-link", html_with_anchors);
+    ("https://example.com/second-link", html_with_anchors);
+  ] in
+
+  let documents = traverse fetch_url "https://example.com/" in
+  [%test_eq: (string * string) list] expecting (DocumentMap.bindings documents)
+;;
+
+let traverse ~env ~sw url =
+  let fetch_doc = fetch_doc ~env ~sw in
+  traverse fetch_doc url

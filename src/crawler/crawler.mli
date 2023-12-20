@@ -1,3 +1,7 @@
 module DocumentMap : Map.S with type key = string
 
-val traverse : Eio_unix.Stdenv.base -> string -> string DocumentMap.t
+val traverse : 
+  env:Eio_unix.Stdenv.base -> 
+  sw:Eio.Switch.t ->
+  string -> 
+  string DocumentMap.t

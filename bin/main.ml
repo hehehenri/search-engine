@@ -1,14 +1,15 @@
-let build_deps ~env ~sw uri =
- let uri = Uri.of_string uri in
- let storage = Storage.connect ~sw ~env uri in
- Deps.{ storage }
-;;
-
 let setup_log () =
  Logs_threaded.enable ();
  Fmt_tty.setup_std_outputs ();
  Logs.set_level ~all:true (Some Info);
  Logs.set_reporter (Logs_fmt.reporter ())
+;;
+
+let build_deps ~env ~sw uri =
+ let uri = Uri.of_string uri in
+ let storage = Storage.connect ~sw ~env uri in
+ Deps.{ storage }
+;;
 
 let () =
  (* TODO: get from .env *)

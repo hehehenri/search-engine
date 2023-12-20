@@ -9,12 +9,18 @@ let handle_not_found () =
   Logs.info (fun m -> m "server.handle_not_found");
   Response.of_string ~body:"not found" `Not_found
 
-let handle_index _deps uri =
+(* TODO: should I add the env and sw to the deps? *)
+let handle_index ~env ~sw ~deps:_ uri =
+  (* TODO: move the logic somewhere else *)
+
+  let _documents = Crawler.traverse ~env ~sw uri in
+  
   Logs.info (fun m -> m "server.handle_index(uri=%s)" uri);
   let body = Printf.sprintf "indexing %s..." uri in
   Response.of_string ~body `OK
+;;
 
-let request_handler deps (params : Request_info.t Server.ctx) =
+let request_handler ~env ~sw deps (params : Request_info.t Server.ctx) =
   let meth = params.request.meth in
   let path = 
       params.request
@@ -34,19 +40,15 @@ let request_handler deps (params : Request_info.t Server.ctx) =
 
   match meth, path with
   | `GET, [] | `GET, [""] -> handle_health_check ()
-  | `GET, "index" :: url :: [] -> handle_index deps url
+  | `GET, "index" :: url :: [] -> handle_index ~env ~sw ~deps url
   | _ -> handle_not_found ()
-
-let host_to_str host = Fmt.str "%a" Eio.Net.Ipaddr.pp host
 
 let run ~sw ~host ~port ~env deps =
   let config =
     Server.Config.create (`Tcp (host, port))
   in
-  let handler = request_handler deps in
+  let handler = request_handler ~env ~sw deps in
   let server = Server.create ~config handler in
-  print_endline @@ Printf.sprintf "listening on http://%s:%d/" (host_to_str host) port;
-  let () = Eio.Net.Ipaddr.pp Format.str_formatter host in
   let command = Server.Command.start ~sw env server in
   command
 

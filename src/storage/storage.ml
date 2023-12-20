@@ -20,8 +20,12 @@ let connect ~env ~sw uri =
   let stdenv = (env :> Caqti_eio.stdenv) in
   let pool = Caqti_eio_unix.connect_pool ~stdenv ~sw uri in
   match pool with
-  | Ok pool -> Storage { pool }
-  | Error e -> raise @@ Storage_error e
+  | Ok pool -> 
+    Logs.info (fun m -> m "Connected to storage successfully"); 
+    Storage { pool }
+  | Error e -> 
+    Logs.err (fun e -> e "Failed to connect to storage"); 
+    raise @@ Storage_error e
 ;;
 
 let use pool f =
@@ -57,4 +61,9 @@ module Token = struct
           ~occurrences
           ~document_url
           conn
+
+  let get_all storage =
+    let Storage { pool } = storage in
+    use pool @@
+      fun conn -> Query.get_all_tokens () conn
 end

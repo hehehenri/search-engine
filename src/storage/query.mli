@@ -13,3 +13,10 @@ val insert_token :
   (module Rapper_helper.CONNECTION) ->
   (unit, [> Caqti_error.call_or_retrieve]) result
   
+val get_all_tokens :
+  unit ->
+  (module CONNECTION) ->
+  (
+    Identifiers.Token.token list,
+    [> Caqti_error.call_or_retrieve]
+  ) result

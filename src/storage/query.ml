@@ -3,12 +3,12 @@ let create_tokens_table =
     execute
       {sql|
         CREATE TABLE tokens (
-          token_id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+          id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
           content TEXT NOT NULL,
-          kind VARCHAR(255),
-          occurrences INT,
-          document_url TEXT,
-          timestamp TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+          kind VARCHAR(255) NOT NULL,
+          occurrences INT NOT NULL,
+          document_url TEXT NOT NULL,
+          created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
         )
       |sql}
   ]
@@ -22,6 +22,25 @@ let insert_token =
         VALUES (%string{content}, %string{kind}, %int{occurrences}, %string{document_url})
       |sql}
   ]  
+
+let get_all_tokens =
+  [%rapper
+    get_many
+      {sql|
+        SELECT
+          @string{id},
+          @string{content},
+          @string{kind},
+          @int{occurrences},
+          @string{document_url},
+          @string{created_at}
+        FROM tokens
+      |sql}
+      function_out]
+    (fun ~id ~content ~kind ~occurrences ~document_url ~created_at ->
+      Identifiers.Token.({
+        id; content; kind; occurrences; document_url; created_at
+      }))
 
 (* TODO: manage to store multiple tokens at the same time *)
 (* let insert_tokens ~tokens = *)

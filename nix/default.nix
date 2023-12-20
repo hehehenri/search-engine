@@ -25,7 +25,7 @@ buildDunePackage rec {
     ppx_rapper_eio
     routes
     ppx_deriving_yojson
-  ] ++ checkInputs;
-
-  checkInputs = [ alcotest ];
+    ppx_inline_test
+    ppx_assert
+  ];
 }

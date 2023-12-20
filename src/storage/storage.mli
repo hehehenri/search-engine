@@ -15,4 +15,6 @@ module Token : sig
   }
 
   val insert : token -> storage -> unit
+
+  val get_all : storage -> Identifiers.Token.token list
 end
