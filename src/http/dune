@@ -1,7 +1,3 @@
 (library
  (name http)
- (libraries 
-  crawler
-  piaf
-  routes
-  deps))
+ (libraries crawler piaf routes deps))

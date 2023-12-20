@@ -1,1 +1,2 @@
-(library (name identifiers))
+(library
+ (name identifiers))

@@ -3,16 +3,17 @@ open Piaf
 module UrlSet = Set.Make(String)
 module DocumentMap = Map.Make(String)
 
-let input = "https://henr.in/"
-
 let _show_url_set url_set =
   print_endline @@ [%derive.show: string list] (UrlSet.elements url_set) 
 
 let _show_document_map document_map =
   print_endline @@ [%derive.show: (string * string) list] (DocumentMap.bindings document_map)
 
+let _show_string_list string_list=
+  print_endline @@ [%derive.show: string list] string_list
+
 let fetch_doc ~env ~sw url =
-  print_endline @@ Printf.sprintf "INFO: fetching doc: %s" url;
+  Logs.info (fun m -> m "Fetching document: %s" url);
 
   match Client.Oneshot.get ~sw env (Uri.of_string url) with
   | Ok res ->
@@ -59,44 +60,44 @@ let href_to_url href base_url =
   | _ -> None
 ;;
 
-let sanitize_hrefs hrefs base_url =
-  hrefs
-  |> List.filter_map (fun href -> href_to_url href base_url)
-;;
-
 let has_visited_url url visited_urls = UrlSet.mem url visited_urls ;;
 
+let sanitize_and_filter_hrefs ~base_url hrefs visited_urls =
+  hrefs
+  |> List.filter_map (fun href -> href_to_url href base_url)
+  |> List.filter (from_same_domain base_url)
+  |> List.filter (fun url -> not @@ has_visited_url url visited_urls)
+;;
 
-let traverse fetch_url url =
+let traverse fetch_url base_url =
   let rec traverse urls_to_visit visited_urls documents =  
     match UrlSet.min_elt_opt urls_to_visit with
     | None -> documents
     | Some current_url ->
       let urls_to_visit = UrlSet.remove current_url urls_to_visit in 
 
-      match has_visited_url url visited_urls with
+      match has_visited_url current_url visited_urls with
       | true -> traverse urls_to_visit visited_urls documents
       | false ->
-        let body = fetch_url url in
+        let body = fetch_url current_url in
         match body with
-        | Ok res_body -> 
-          let documents = DocumentMap.add url res_body documents in
+        | Ok res_body ->
+          let documents = DocumentMap.add current_url res_body documents in
     
           let hrefs = Parser.anchors res_body in 
-          let urls = 
-            sanitize_hrefs hrefs input
-            |> List.filter (from_same_domain input)
-            |> List.filter (fun url -> not @@ has_visited_url url visited_urls)
-            |> List.to_seq in
+          let urls = sanitize_and_filter_hrefs ~base_url hrefs  visited_urls in
 
-          let urls_to_visit = UrlSet.add_seq urls urls_to_visit in
-          let visited_urls = UrlSet.add url visited_urls in
+          let urls_to_visit = 
+            UrlSet.add_seq (List.to_seq urls) urls_to_visit in
+          let visited_urls = UrlSet.add current_url visited_urls in
+
           traverse urls_to_visit visited_urls documents
         | Error e -> 
-          print_endline @@ Printf.sprintf "ERROR: failed to fetch doc: %s" (Error.to_string e);
+          Logs.warn (fun m -> m "failed to fetch doc %s" (Error.to_string e));
+
           traverse urls_to_visit visited_urls documents 
   in
-  traverse (UrlSet.singleton url) UrlSet.empty DocumentMap.empty
+  traverse (UrlSet.singleton base_url) UrlSet.empty DocumentMap.empty
 ;; 
 
 open Base

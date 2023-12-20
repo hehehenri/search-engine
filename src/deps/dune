@@ -1,4 +1,3 @@
 (library
  (name deps)
- (libraries
-   storage))
+ (libraries storage))
