@@ -82,7 +82,8 @@ let traverse fetch_url base_url =
         let body = fetch_url current_url in
         match body with
         | Ok res_body ->
-          let documents = DocumentMap.add current_url res_body documents in
+          let res_text = Parser.text res_body in
+          let documents = DocumentMap.add current_url res_text documents in
     
           let hrefs = Parser.anchors res_body in 
           let urls = sanitize_and_filter_hrefs ~base_url hrefs  visited_urls in
@@ -116,7 +117,8 @@ let%test_unit "Crawler.traverse" =
       <head>
         <title>Simple HTML Boilerplate</title>
       </head>
-      <body> 
+      <body>
+        <h1>Simple Page</h1> 
     |} ^ anchors ^ {|
       </body>
       </html>
@@ -129,9 +131,9 @@ let%test_unit "Crawler.traverse" =
   in
 
   let expecting = [
-    ("https://example.com/", html_with_anchors);
-    ("https://example.com/first-link", html_with_anchors);
-    ("https://example.com/second-link", html_with_anchors);
+    ("https://example.com/", "Simple HTML Boilerplate " ^ "Simple Page");
+    ("https://example.com/first-link", "Simple HTML Boilerplate " ^ "Simple Page");
+    ("https://example.com/second-link", "Simple HTML Boilerplate " ^ "Simple Page");
   ] in
 
   let documents = traverse fetch_url "https://example.com/" in

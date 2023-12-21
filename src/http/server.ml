@@ -14,7 +14,7 @@ let frequency_table (tokens:Lexer.token list) =
   List.fold_left (fun acc token -> 
     let () = match Hashtbl.find_opt acc token with
     | Some value -> Hashtbl.replace acc token (value + 1) 
-    | None -> Hashtbl.add acc token 0 in
+    | None -> Hashtbl.add acc token 1 in
     acc) acc tokens
 ;;
 
