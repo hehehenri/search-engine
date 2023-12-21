@@ -50,7 +50,7 @@ let handle ~env ~sw ~(deps:Deps.deps) (payload:Piaf.Body.t) =
     Storage_error e -> Error (Response.storage_error e) 
 ;;
 
-let handle ~env ~sw ~(deps:Deps.deps) (payload:Piaf.Body.t) =
-  let result = handle ~env ~sw ~deps payload in
+let handle ~env ~sw ~(deps:Deps.deps) (req:Piaf.Request.t) =
+  let result = handle ~env ~sw ~deps req.body in
   Response.of_result result
 ;;

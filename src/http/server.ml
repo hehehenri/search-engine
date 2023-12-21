@@ -25,7 +25,8 @@ let request_handler ~env ~sw ~(deps:Deps.deps) (params : Request_info.t Server.c
 
   match meth, path with
   | `GET, [] | `GET, [""] -> handle_health_check ()
-  | `POST, "index" :: [] -> Index_handler.handle ~env ~sw ~deps params.request.body
+  | `POST, "index" :: [] -> Index_handler.handle ~env ~sw ~deps params.request
+  | `POST, "query" :: [] -> Query_handler.handle ~env ~sw ~deps params.request
   | _ -> handle_not_found ()
 ;;
   
