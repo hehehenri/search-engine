@@ -1,5 +1,10 @@
 open Rapper_helper
 
+val install_uuid :
+  unit ->
+  (module CONNECTION) ->
+  (unit, [> Caqti_error.call_or_retrieve]) result
+
 val create_tokens_table :
   unit ->
   (module CONNECTION) ->

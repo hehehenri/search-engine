@@ -1,3 +1,9 @@
+let install_uuid =
+  [%rapper
+    execute 
+      {sql| CREATE EXTENSION IF NOT EXISTS "uuid-ossp"; |sql}
+  ]
+
 let create_tokens_table =
   [%rapper
     execute

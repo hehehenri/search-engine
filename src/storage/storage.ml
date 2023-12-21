@@ -1,20 +1,14 @@
-exception Storage_error of
-  [ Caqti_error.load | Caqti_error.connect | Caqti_error.call_or_retrieve ] ;;
-
-let () =
-  Printexc.register_printer (function 
-  | Storage_error e -> 
-    let message =
-      Format.asprintf "Storage_error(%a)" Caqti_error.pp e
-    in
-    Some message
-
-  | _ -> None)
-;;
-
 type pool = ((module Rapper_helper.CONNECTION), Caqti_error.t) Caqti_eio.Pool.t
 type storage = | Storage of { pool : pool }
 type t = storage
+
+type error = | Storage_error of string
+
+let use pool f =
+  match Caqti_eio.Pool.use f pool with
+  | Ok v -> Ok v
+  | Error e -> Error (Storage_error (Caqti_error.show e))
+;;
 
 let connect ~env ~sw uri =
   let stdenv = (env :> Caqti_eio.stdenv) in
@@ -25,13 +19,24 @@ let connect ~env ~sw uri =
     Storage { pool }
   | Error e -> 
     Logs.err (fun e -> e "Failed to connect to storage"); 
-    raise @@ Storage_error e
+    failwith (Caqti_error.show e)
 ;;
 
-let use pool f =
-  match Caqti_eio.Pool.use f pool with
-  | Ok v -> v
-  | Error e -> raise @@ Storage_error e
+let migrate ~env ~sw uri =
+  let Storage { pool } = connect ~env ~sw uri in 
+  let (let*) = Result.bind in
+
+  let result = use pool @@ fun conn ->
+    let* () = Query.install_uuid () conn in
+    Logs.info (fun m -> m "Migrations: installed uuid extension");
+    let* () = Query.create_tokens_table () conn in
+    Logs.info (fun m -> m "Migrations: created tokens table");
+    Ok ()
+  in
+
+  match result with
+  | Ok () -> Logs.info (fun m -> m "Migrations: Done.");
+  | Error (Storage_error e) -> Logs.err (fun m -> m "Migrations: %s" e)
 ;;
 
 module Token = struct

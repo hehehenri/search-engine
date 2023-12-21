@@ -1,10 +1,17 @@
 type storage
 type t = storage
+type error = | Storage_error of string
 
 val connect : 
   env:Eio_unix.Stdenv.base -> 
   sw:Eio.Switch.t -> 
   Uri.t -> storage
+
+val migrate :
+  env:Eio_unix.Stdenv.base -> 
+  sw:Eio.Switch.t -> 
+  Uri.t ->
+  unit
 
 module Token : sig
   type token = {
@@ -16,7 +23,7 @@ module Token : sig
 
   val dto_of_token : Lexer.token -> int -> string -> token 
 
-  val insert : token -> storage -> unit
+  val insert : token -> storage -> (unit, error) result
 
-  val get_all : storage -> Identifiers.Token.token list
+  val get_all : storage -> (Identifiers.Token.token list, error) result
 end

@@ -1,6 +1,6 @@
-(executable
- (public_name search_engine)
- (name main)
+(executables 
+ (names main migrate)
+ (public_names search_engine migrate)
  (libraries
   deps
   crawler

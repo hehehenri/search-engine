@@ -20,15 +20,18 @@ let frequency_table (tokens:Lexer.token list) =
 
 module ResponseError = struct
   let create ~message ~status =
-    Logs.err (fun m -> m "request error: %s" message);
     Response.of_string ~body:message status
 
   let from_err ~status err =
     let message = Error.to_string err in
+
+    Logs.err (fun m -> m "Request error: %s" message);
     create ~message ~status
 
   let invalid_payload payload =
-    let message = Printf.sprintf "invalid payload: %s" payload in
+    let message = Printf.sprintf "Invalid payload: %s" payload in
+
+    Logs.err (fun m -> m "%s" message);
     create ~message ~status:`Bad_request
 end
 
@@ -55,23 +58,32 @@ let handle_index ~env ~sw ~(deps:Deps.deps) (payload:Body.t) =
 
   Logs.info (fun m -> m "server.handle_index(uri=%s)" uri);
 
+  let exception Storage_error of string in
+
   (* TODO: move the logic somewhere else *)
-  let store_document uri tokens =
+  let store_tokens uri tokens =
     let frequency_table = frequency_table tokens in
 
     Hashtbl.iter (fun token frequency -> 
       let open Storage.Token in
       let token = dto_of_token token frequency uri in
-      Storage.Token.insert token deps.storage; 
+      match Storage.Token.insert token deps.storage with
+      | Ok () -> ()
+      | Error (Storage_error e) -> raise (Storage_error e) 
     ) frequency_table;
   in
 
   let open Crawler in
   let documents = traverse ~env ~sw uri in
   let documents = DocumentMap.map Lexer.tokenize documents in
-  DocumentMap.iter store_document documents;
-  
-  Ok (Response.create `OK)
+
+  try
+    DocumentMap.iter store_tokens documents;
+    Ok (Response.create `OK)
+  with
+    Storage_error e -> Error (ResponseError.create 
+      ~message:e 
+      ~status:`Internal_server_error)  
 ;;
 
 let handle_index ~env ~sw ~(deps:Deps.deps) (payload:Body.t) =
@@ -87,9 +99,7 @@ let request_handler ~env ~sw ~(deps:Deps.deps) (params : Request_info.t Server.c
     |> Uri.path in
 
 
-  Logs.info (fun m ->
-    let meth = Method.to_string meth in
-    m "Request %s: %s" meth path);
+  Logs.info (fun m -> m "Handle request: %a" Request.pp_hum params.request);
 
   let path =
     path
@@ -100,15 +110,16 @@ let request_handler ~env ~sw ~(deps:Deps.deps) (params : Request_info.t Server.c
   | `GET, [] | `GET, [""] -> handle_health_check ()
   | `POST, "index" :: [] -> handle_index ~env ~sw ~deps params.request.body
   | _ -> handle_not_found ()
-
+;;
+  
 let run ~sw ~host ~port ~env deps =
   let config =
     Server.Config.create (`Tcp (host, port))
   in
   let handler = request_handler ~env ~sw ~deps in
   let server = Server.create ~config handler in
-  let command = Server.Command.start ~sw env server in
-  command
+  Server.Command.start ~sw env server
+;;
 
 let listen ~sw ~env ~deps =
   let host = Eio.Net.Ipaddr.V4.loopback in
