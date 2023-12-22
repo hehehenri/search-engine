@@ -15,9 +15,14 @@
           extraOverlays = [ ];
         }).extend
           (self: super: { ocamlPackages = super.ocaml-ng.ocamlPackages_5_0; });
-      in let searchEngine = pkgs.callPackage ./nix { inherit nix-filter; };
-      in rec {
-        packages = { inherit searchEngine; };
-        devShell = import ./nix/shell.nix { inherit pkgs searchEngine; };
+
+        serverPackage = pkgs.callPackage ./nix/server.nix { inherit nix-filter; }; 
+
+        shell = import ./nix/shell.nix { inherit pkgs serverPackage; };
+      in 
+      rec {
+        inherit shell;
+        packages = { inherit serverPackage; };
+        devShells.default = shell;
       });
 }

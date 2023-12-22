@@ -1,9 +1,9 @@
-{ pkgs, searchEngine }:
+{ pkgs, serverPackage }:
 
 with pkgs;
 with pkgs.ocamlPackages;
 mkShell {
-  inputsFrom = [ searchEngine ];
+  inputsFrom = [ serverPackage ];
   packages = [
     # formatters
     nixfmt
@@ -13,5 +13,8 @@ mkShell {
     ocaml
     dune_3
     ocaml-lsp
+
+    nodejs
+    nodePackages.npm
   ];
 }
