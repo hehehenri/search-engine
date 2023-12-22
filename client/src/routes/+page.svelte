@@ -1,6 +1,7 @@
 <script lang="ts">
   import { Search } from "lucide-svelte";
   import Error from "$lib/Error.svelte";
+	import api from "$lib/api";
   
   let url: string = "";
   let urlError: string | null = null;
@@ -8,22 +9,33 @@
   const hostOfUrl = (url: string) => {
     return (new URL(url)).hostname;
   }
-  
-  const postIndex = (url: string) => {
+
+  const sanitizeUrl = (urlPayload: string) => {
     urlError = null;
 
-    if (!url.length) 
-      return urlError = "Write the URL first.";
+    if (!url.length) {
+      urlError = "Write the URL first.";
+      return null;
+    } 
   
     try {    
-      const host = hostOfUrl(url);
+      const url = hostOfUrl(urlPayload);
 
-      console.log(host)
+      return url;
     } catch (_) {
-      return urlError = "That's not a valid URL.";
+      urlError = "That's not a valid URL.";
+      return null;
     }
-  };
+  }
 
+  const postIndex = async (urlPayload: string) => {
+    let url = sanitizeUrl(urlPayload);
+    if (!url) return;
+
+    let res = await api.index(url);
+
+    console.log(res);
+  };
 </script>
 
 <div class="w-screen h-screen flex items-center justify-center bg-indigo-50/40 min-w-[350px]">
@@ -39,7 +51,6 @@
           type="url"
           placeholder="https://example.com/"
           class="peer rounded-full placeholder:text-zinc-400 text-zinc-700 w-full px-3 py-1.5 pl-12 text-lg outline-indigo-300 shadow-[rgba(7,_65,_210,_0.1)_0px_9px_30px]"
-          on:keydown={() => url.length && postIndex(url)}
         />
         <Error error={urlError} />
         <Search class="mx-3 absolute left-0 text-zinc-400 peer-focus:text-indigo-500" />
