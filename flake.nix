@@ -21,7 +21,6 @@
         shell = import ./nix/shell.nix { inherit pkgs serverPackage; };
       in 
       rec {
-        inherit shell;
         packages = { inherit serverPackage; };
         devShells.default = shell;
       });
