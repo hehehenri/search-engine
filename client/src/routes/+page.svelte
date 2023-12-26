@@ -67,13 +67,13 @@
 
 <style>
   .active-index {
-    @apply bg-indigo-200 dark:bg-indigo-900;
-    @apply text-indigo-50
-  }
-  
-  .inactive-index {
     @apply bg-indigo-500 dark:bg-indigo-800/40 ;
     @apply text-indigo-50 dark:text-indigo-300/80;
+  }
+
+  .inactive-index {
+    @apply bg-indigo-200 dark:bg-indigo-900;
+    @apply text-indigo-50
   }
 
   .input-shadow {

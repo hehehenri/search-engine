@@ -3,7 +3,8 @@ type payload = {
   uri: string;
 } [@@deriving yojson]
 
-let handle ~env ~sw ~(deps:Deps.t) (req:Piaf.Request.t) =
+let handle ~env:_ ~sw:_ ~(deps:Deps.t) (req:Piaf.Request.t) =
+  let _ = deps in
   let (let*) = Result.bind in
 
   let* body = Piaf.Body.to_string req.body 
@@ -13,9 +14,12 @@ let handle ~env ~sw ~(deps:Deps.t) (req:Piaf.Request.t) =
   let* { query; uri } = payload_of_yojson body_json
     |> Result.map_error (fun _ -> Response.invalid_payload body) in
 
-  let query_token = Lexer.tokenize query in
+  let _ = uri in
+  let query_tokens = Lexer.tokenize query in
 
-  Ok (Piaf.Response.create Piaf.Status.(`OK))
+  print_endline @@ [%derive.show: Lexer.token list] query_tokens;
+
+  Ok (Piaf.Response.create `OK)
 ;;
 
 let handle ~env ~sw ~(deps:Deps.t) req =

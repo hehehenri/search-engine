@@ -2,7 +2,7 @@ type token =
   | Word of string
   | Number of string
   | Other of char
-;;
+[@@deriving show] ;;
 
 let to_string token =
   match token with
