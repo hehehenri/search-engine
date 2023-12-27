@@ -1,7 +1,6 @@
 type index_payload = {
-  uri: string
+  url: string
 } [@@deriving yojson]
-
 
 let frequency_table (tokens:Lexer.token list) =
   let acc = Hashtbl.create (List.length tokens) in
@@ -12,6 +11,15 @@ let frequency_table (tokens:Lexer.token list) =
     acc) acc tokens
 ;;
 
+let host_of_string string =
+  let uri = Uri.of_string string in
+  let host = Uri.host uri in
+
+  match host with
+  | Some host -> Ok host
+  | None -> Error (Response.invalid_payload string)
+;;
+
 let handle ~env ~sw ~(deps:Deps.deps) (payload:Piaf.Body.t) =
   let (let*) = Result.bind in
 
@@ -19,10 +27,10 @@ let handle ~env ~sw ~(deps:Deps.deps) (payload:Piaf.Body.t) =
     |> Result.map_error (Response.from_error `Bad_request) in
   let body_json = Yojson.Safe.from_string body in
   
-  let* { uri } = index_payload_of_yojson body_json 
+  let* { url } = index_payload_of_yojson body_json 
     |> Result.map_error (fun _ -> Response.invalid_payload body) in
 
-  Logs.info (fun m -> m "server.handle_index(uri=%s)" uri);
+  Logs.info (fun m -> m "server.handle_index(url=%s)" url);
 
   let exception Storage_error of string in
 
@@ -40,7 +48,8 @@ let handle ~env ~sw ~(deps:Deps.deps) (payload:Piaf.Body.t) =
   in
 
   let open Crawler in
-  let documents = traverse ~env ~sw uri in
+  let* host = host_of_string url in
+  let documents = traverse ~env ~sw host in
   let documents = DocumentMap.map Lexer.tokenize documents in
 
   try

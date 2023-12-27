@@ -62,14 +62,14 @@ let href_to_url href base_url =
 
 let has_visited_url url visited_urls = UrlSet.mem url visited_urls ;;
 
-let sanitize_and_filter_hrefs ~base_url hrefs visited_urls =
+let sanitize_and_filter_hrefs ~uri hrefs visited_urls =
   hrefs
-  |> List.filter_map (fun href -> href_to_url href base_url)
-  |> List.filter (from_same_domain base_url)
+  |> List.filter_map (fun href -> href_to_url href uri)
+  |> List.filter (from_same_domain uri)
   |> List.filter (fun url -> not @@ has_visited_url url visited_urls)
 ;;
 
-let traverse fetch_url base_url =
+let traverse fetch_url uri =
   let rec traverse urls_to_visit visited_urls documents =  
     match UrlSet.min_elt_opt urls_to_visit with
     | None -> documents
@@ -86,7 +86,7 @@ let traverse fetch_url base_url =
           let documents = DocumentMap.add current_url res_text documents in
     
           let hrefs = Parser.anchors res_body in 
-          let urls = sanitize_and_filter_hrefs ~base_url hrefs  visited_urls in
+          let urls = sanitize_and_filter_hrefs ~uri hrefs  visited_urls in
 
           let urls_to_visit = 
             UrlSet.add_seq (List.to_seq urls) urls_to_visit in
@@ -98,7 +98,7 @@ let traverse fetch_url base_url =
 
           traverse urls_to_visit visited_urls documents 
   in
-  traverse (UrlSet.singleton base_url) UrlSet.empty DocumentMap.empty
+  traverse (UrlSet.singleton uri) UrlSet.empty DocumentMap.empty
 ;; 
 
 open Base
@@ -140,6 +140,7 @@ let%test_unit "Crawler.traverse" =
   [%test_eq: (string * string) list] expecting (DocumentMap.bindings documents)
 ;;
 
-let traverse ~env ~sw url =
+let traverse ~env ~sw host =
   let fetch_doc = fetch_doc ~env ~sw in
-  traverse fetch_doc url
+  let uri = Uri.to_string host in
+  traverse fetch_doc uri

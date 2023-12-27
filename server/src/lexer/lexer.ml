@@ -20,7 +20,7 @@ let is_digit char = match char with
   | _ -> false
 ;;
 
-let skip_char char =
+let should_skip_char char =
   match char with
   | ' ' | '\n' -> true
   | _ -> false
@@ -51,16 +51,21 @@ let tokenize input =
   let rec tokenize (input : char list) acc =
     match input with
     | [] -> acc
-    | head :: tail when skip_char head -> tokenize tail acc
-    | head :: _ when is_alpha head -> 
-      let word, rest = drop_while is_alpha input in 
-      tokenize rest (Word word :: acc)
-    | head :: _ when is_digit head ->
-      let number, rest = drop_while is_digit input in 
-      tokenize rest (Number number :: acc)
+    | head :: tail when 
+      should_skip_char head ->
+        tokenize tail acc
+    | head :: _ when 
+      is_alpha head -> 
+        let word, rest = drop_while is_alpha input in 
+        tokenize rest (Word word :: acc)
+    | head :: _ when 
+      is_digit head ->
+        let number, rest = drop_while is_digit input in 
+        tokenize rest (Number number :: acc)
     | head :: tail ->
       let token = Other head in
       tokenize tail (token :: acc)
   in
+  let input = String.lowercase_ascii input in
   let input = string_to_chars input in
   tokenize input []
