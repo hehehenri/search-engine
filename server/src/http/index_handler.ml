@@ -49,7 +49,7 @@ let handle ~env ~sw ~(deps:Deps.deps) (payload:Piaf.Body.t) =
 
   let open Crawler in
   let* host = host_of_string url in
-  let documents = traverse ~env ~sw host in
+  let documents = traverse ~env ~sw ~host in
   let documents = DocumentMap.map Lexer.tokenize documents in
 
   try

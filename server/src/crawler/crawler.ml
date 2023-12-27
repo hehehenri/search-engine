@@ -140,7 +140,6 @@ let%test_unit "Crawler.traverse" =
   [%test_eq: (string * string) list] expecting (DocumentMap.bindings documents)
 ;;
 
-let traverse ~env ~sw host =
+let traverse ~env ~sw ~host =
   let fetch_doc = fetch_doc ~env ~sw in
-  let uri = Uri.to_string host in
-  traverse fetch_doc uri
+  traverse fetch_doc host
