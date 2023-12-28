@@ -1,21 +1,21 @@
 open Piaf
 
-module UrlSet = Set.Make(String)
-module DocumentMap = Map.Make(String)
+module UriSet = Set.Make(Uri)
+module DocumentMap = Map.Make(Uri)
 
 let _show_url_set url_set =
-  print_endline @@ [%derive.show: string list] (UrlSet.elements url_set) 
+  print_endline @@ [%derive.show: Uri.t list] (UriSet.elements url_set) 
 
 let _show_document_map document_map =
-  print_endline @@ [%derive.show: (string * string) list] (DocumentMap.bindings document_map)
+  print_endline @@ [%derive.show: (Uri.t * string) list] (DocumentMap.bindings document_map)
 
 let _show_string_list string_list=
   print_endline @@ [%derive.show: string list] string_list
 
-let fetch_doc ~env ~sw url =
-  Logs.info (fun m -> m "Fetching document: %s" url);
+let fetch_doc ~env ~sw uri =
+  Logs.info (fun m -> m "Fetching document: %s" (Uri.to_string uri));
 
-  match Client.Oneshot.get ~sw env (Uri.of_string url) with
+  match Client.Oneshot.get ~sw env uri with
   | Ok res ->
     if Status.is_successful res.status
     then Body.to_string res.body
@@ -25,72 +25,73 @@ let fetch_doc ~env ~sw url =
   | Error e -> failwith (Error.to_string e)
 ;;
 
-let url_domain url =
-  let start_pos = String.index_opt url '/' |> Option.value ~default:(String.length url) in
-  let end_pos = String.index_from_opt url start_pos '.' |> Option.value ~default:(String.length url) in
-  String.sub url (start_pos + 2) (end_pos - start_pos - 2)
-;;
-
-let from_same_domain url url' =
-  let domain = url_domain url in
-  let domain' = url_domain url' in
-  domain = domain'
-;;
-
-let merge_url base_url path =
-  let normalized_base_url =
-    if String.length base_url > 0 && base_url.[String.length base_url - 1] = '/' then
-      base_url
-    else
-      base_url ^ "/"
+let from_same_domain uri uri' =
+  let from_same_domain uri uri' =
+    let (let*) = Option.bind in
+    let* host = Uri.host uri in
+    let* host' = Uri.host uri' in
+    Some (host = host')
   in
-  let normalized_path =
-    if String.length path > 0 && path.[0] = '/' then
-      String.sub path 1 (String.length path - 1)
-    else
-      path
-  in
-  normalized_base_url ^ normalized_path
-;;  
-
-let href_to_url href base_url =
-  match href |> String.to_seq |> List.of_seq with
-  | 'h' :: 't' :: 't' :: 'p' :: _ -> Some href
-  | '/' :: _ -> Some (merge_url base_url href)
-  | _ -> None
+  match from_same_domain uri uri' with
+  | Some x -> x
+  | None -> false
 ;;
 
-let has_visited_url url visited_urls = UrlSet.mem url visited_urls ;;
+let href_to_url href uri =
+  match String.get href 0 with
+  | '/' ->
+    (* 
+      This parses hrefs 
+        from: /some/path 
+        to:   http(s)://base-uri/some/path 
+    *)
+    let href_uri = Uri.of_string href in 
+    let href_uri = Uri.with_path uri (Uri.path href_uri) in
+    Some (href_uri)
+  | _ -> 
+    try
+      (* Absolute_http.of_string will fail if the href is invalid *)
+      let href_uri = Uri.Absolute_http.of_string href in
+      Some (Uri.Absolute_http.to_uri href_uri)
+    with
+    _ -> None
+  ;;
+
+let has_visited_uri uri visited_uris =
+  UriSet.mem uri visited_uris
+;;
 
 let sanitize_and_filter_hrefs ~uri hrefs visited_urls =
   hrefs
   |> List.filter_map (fun href -> href_to_url href uri)
   |> List.filter (from_same_domain uri)
-  |> List.filter (fun url -> not @@ has_visited_url url visited_urls)
+  |> List.filter (fun url -> not @@ has_visited_uri url visited_urls)
 ;;
 
-let traverse fetch_url uri =
+let traverse fetch_uri (uri:Uri.t) =
   let rec traverse urls_to_visit visited_urls documents =  
-    match UrlSet.min_elt_opt urls_to_visit with
+    match UriSet.min_elt_opt urls_to_visit with
     | None -> documents
-    | Some current_url ->
-      let urls_to_visit = UrlSet.remove current_url urls_to_visit in 
+    | Some current_uri ->
+      let urls_to_visit = UriSet.remove current_uri urls_to_visit in 
 
-      match has_visited_url current_url visited_urls with
+      match has_visited_uri current_uri visited_urls with
       | true -> traverse urls_to_visit visited_urls documents
       | false ->
-        let body = fetch_url current_url in
+        let body = fetch_uri current_uri in
         match body with
         | Ok res_body ->
           let res_text = Parser.text res_body in
-          let documents = DocumentMap.add current_url res_text documents in
+          let documents = DocumentMap.add current_uri res_text documents in
     
-          let hrefs = Parser.anchors res_body in 
-          let urls = sanitize_and_filter_hrefs ~uri hrefs  visited_urls in
+          let hrefs = Parser.anchors res_body in
+          let urls = sanitize_and_filter_hrefs ~uri hrefs visited_urls in
 
           let urls_to_visit = 
-            UrlSet.add_seq (List.to_seq urls) urls_to_visit in
-          let visited_urls = UrlSet.add current_url visited_urls in
+            UriSet
+        .add_seq (List.to_seq urls) urls_to_visit in
+          let visited_urls = UriSet
+        .add current_uri visited_urls in
 
           traverse urls_to_visit visited_urls documents
         | Error e -> 
@@ -98,7 +99,7 @@ let traverse fetch_url uri =
 
           traverse urls_to_visit visited_urls documents 
   in
-  traverse (UrlSet.singleton uri) UrlSet.empty DocumentMap.empty
+  traverse (UriSet.singleton uri) UriSet.empty DocumentMap.empty
 ;; 
 
 open Base
@@ -136,10 +137,11 @@ let%test_unit "Crawler.traverse" =
     ("https://example.com/second-link", "Simple HTML Boilerplate " ^ "Simple Page");
   ] in
 
-  let documents = traverse fetch_url "https://example.com/" in
-  [%test_eq: (string * string) list] expecting (DocumentMap.bindings documents)
+  let documents = traverse fetch_url (Uri.of_string "https://example.com/") in
+  [%test_eq: (string * string) list] expecting (DocumentMap.bindings documents |> List.map ~f:(fun (k, v) -> (Uri.to_string k, v)))
 ;;
 
 let traverse ~env ~sw ~host =
   let fetch_doc = fetch_doc ~env ~sw in
-  traverse fetch_doc host
+  let uri = Uri.make ~scheme:"https" ~host () in
+  traverse fetch_doc uri

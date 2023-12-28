@@ -1,4 +1,4 @@
-module DocumentMap : Map.S with type key = string
+module DocumentMap : Map.S with type key = Uri.t
 
 val traverse : 
   env:Eio_unix.Stdenv.base -> 
