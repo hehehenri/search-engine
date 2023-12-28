@@ -18,12 +18,25 @@ module Token : sig
     content: string;
     kind: [`Word | `Number | `Other];
     occurrences: int;
-    document_url: string;
+    document_url: Uri.t;
   }
 
-  val dto_of_token : Lexer.token -> int -> string -> token 
+  val dto_of_token : Lexer.token -> int -> Uri.t -> token 
 
   val insert : token -> storage -> (unit, error) result
 
   val get_all : storage -> (Identifiers.Token.token list, error) result
+end
+
+module Document : sig
+  val get_term_count :
+    storage ->
+    document_url:string ->
+    term:string ->
+    (int, error) result
+
+  val get_terms_sum :
+    storage ->
+    document_url:string ->
+    (int, error) result
 end

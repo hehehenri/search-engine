@@ -64,3 +64,22 @@ let get_all_tokens =
 (*         ) *)
 (*       |sql} *)
 (*   ] *)
+
+let get_term_count =
+  [%rapper
+    get_one
+      {sql|
+        SELECT @int{occurrences} FROM tokens as t
+          WHERE t.content = %string{term}
+          AND t.document_url = %string{document_url}
+      |sql}      
+  ]
+
+let get_terms_sum =
+  [%rapper
+    get_one
+      {sql|
+        SELECT SUM(@int{occurrences}) FROM tokens as t
+          WHERE t.document_url = %string{document_url}
+      |sql}
+  ]

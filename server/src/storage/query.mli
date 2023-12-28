@@ -25,3 +25,14 @@ val get_all_tokens :
     Identifiers.Token.token list,
     [> Caqti_error.call_or_retrieve]
   ) result
+
+val get_term_count :
+  term:string ->
+  document_url:string ->
+  (module CONNECTION) ->
+  (int, [> Caqti_error.call_or_retrieve]) result
+
+val get_terms_sum :
+  document_url:string ->
+  (module CONNECTION) ->
+  (int, [> Caqti_error.call_or_retrieve]) result

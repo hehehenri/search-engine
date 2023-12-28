@@ -44,7 +44,7 @@ module Token = struct
     content: string;
     kind: [`Word | `Number | `Other];
     occurrences: int;
-    document_url: string;
+    document_url: Uri.t;
   } ;;
 
 
@@ -59,6 +59,7 @@ module Token = struct
     | Other char ->
       { content=(Char.escaped char) ; kind=`Other; occurrences; document_url; }
   ;;
+
   let token_kind token =
     match token.kind with
     | `Word -> "word"
@@ -69,6 +70,7 @@ module Token = struct
     let Storage { pool } = storage in
     let { content; occurrences; document_url; _ } = token in
     let kind = token_kind token in
+    let document_url = Uri.to_string document_url in
 
     use pool @@
       fun conn -> 
@@ -78,9 +80,27 @@ module Token = struct
           ~occurrences
           ~document_url
           conn
+  ;;
 
   let get_all storage =
     let Storage { pool } = storage in
     use pool @@
       fun conn -> Query.get_all_tokens () conn
+  ;;
+end
+
+module Document = struct
+  let get_term_count storage ~document_url ~term =
+    let Storage { pool } = storage in
+    use pool @@
+      fun conn ->
+        Query.get_term_count ~term ~document_url conn
+  ;;
+
+  let get_terms_sum storage ~document_url = 
+    let Storage { pool } = storage in
+    use pool @@
+      fun conn ->
+        Query.get_terms_sum ~document_url conn
+  ;;
 end
